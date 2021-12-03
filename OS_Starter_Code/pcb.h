@@ -2,9 +2,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdlib.h>
+
 //pu: public 
 //pr: private
-enum state {RUNNING, WAITING, BLOCKED}; /*to express the state of process*/
+
+
+/* That file is represented as an essential part of out project. as it will hold data 
+    for all processes needs to run.
+
+    Data fields:
+        state: enum {running, waiting, blocked}
+            usually we will use running and waiting only as we assume that all processes are cpu bound
+        process: struct {prog_id, arrival time, curr state, runtime, execution time, finish time, priority}
+            hold for data needed for each process running
+            program id: should be defined by getpid()
+            arrival time: extracted from file read
+            current state: should first defined to be waiting
+            runtime: extracted from file
+            exectution time: should be given from schedular algorithm by message queue
+            finish time: should be given from schedular algorithm by messege queue
+            prioriy: extracted from file, and mainly used only by HPF algorithm
+        pcb: struct
+            just list of processes.
+
+    Functions:
+
+            
+
+
+*/
+
+
+
+enum state {RUNNING, WAITING, BLOCKED, FINISHED}; /*to express the state of process*/
 
 struct process
 {
@@ -13,7 +43,9 @@ struct process
     int         arrival_time;   /*Arrival time at which process arrived*/
     enum state  curr_state;     /*state of process*/
     int         rum_time;       /*Time process that should be spent on CPU, source: file*/
-    int         exec_time;      /*Exection time. time already spent on CPU*/
+    int         exec_time;      /*Exection time. time already spent on CPU(Time elapsed)*/
+    int         finish_time;    /*time at which algorithm finish*/
+    int         priority;       /*Priority used mainly in HPF algorithm*/
     /*
         The waiting time and remaining time should are to be caluculed in fuctions
         Remaining time= run_time - exec_time
@@ -36,16 +68,18 @@ struct pcb *g_pcb;      /*Global variable  for pcb*/
 int g_n_elemenets;      /*number of processes pcb can hold*/
 int g_index;            /*index at whict next elemet to be inserted should be intialized first to zero*/
 
-struct process* pu_create_process(int prog_id,int arrival_time,enum state curr_state, int runtime,int exec_time)
+struct process* pu_create_process(int prog_id,int arrival_time, int runtime, int priority)
 {
     struct process *tmp_p;
     tmp_p=malloc(sizeof *tmp_p); /*Intializing the variable*/
 
     tmp_p->prog_id=prog_id;
     tmp_p->arrival_time=arrival_time;
-    tmp_p->curr_state=curr_state;
+    tmp_p->curr_state=WAITING;
     tmp_p->rum_time=runtime;
-    tmp_p->exec_time=exec_time;
+    tmp_p->exec_time=0;
+    tmp_p->finish_time=-1; /*should be edited later to represent exact finish time.*/
+    tmp_p->priority=priority;
 
 }
 
@@ -88,8 +122,10 @@ struct pcb* pu_create_pcb_100()
     return pu_create_pcb(100);
 }
 
+
 int pu_get_cur_size()
 {
+    /*return current size of pcb*/
     return g_n_elemenets;
 }
 void pu_update_size(int new_size)
@@ -135,6 +171,8 @@ int pu_find_index_at_pid(int pid)
     }
 }
 
+void pr_delete_at_index(int i_to_delete);
+
 void pu_delete_process(int pid)
 {
 
@@ -163,7 +201,7 @@ void pu_change_state_for_pid(int pid, enum state cur_state)
     g_pcb->processes[i].curr_state=cur_state;
 }
 
-void pu_update_state_to_wainting(int pid)
+void pu_update_state_to_waiting(int pid)
 {   
     /*
         Quickly update state of certain pid to waiting
@@ -189,7 +227,7 @@ struct process*  pu_get_process_at_pid(int pid)
 
 }
 
-void pu_update_process (int prog_id,enum state curr_state, int runtime,int exec_time)
+void pu_update_process (int prog_id,enum state curr_state,int exec_time,int finish_time)
 {
     /*
         update value of process at prog_id
@@ -201,8 +239,8 @@ void pu_update_process (int prog_id,enum state curr_state, int runtime,int exec_
     struct process *tmp_p=pu_get_process_at_pid(prog_id);
 
     tmp_p->curr_state=curr_state;
-    tmp_p->rum_time=runtime;
     tmp_p->exec_time=exec_time;
+    tmp_p->finish_time=finish_time;
 
 }
 
@@ -216,7 +254,7 @@ int pu_get_remaining_time(int pid)
     return (tmp_p->rum_time-tmp_p->exec_time);
 
 }
-
+//TODO change it to work with clock
 int pu_get_waiting_time(int pid)
 {
      /*
@@ -242,3 +280,28 @@ void pu_update_exec_time(int pid, int new_exec_time)
     tmp_p->exec_time=new_exec_time;
 }
 
+struct pcb* pu_get_processes_at_arvl_time(int arrival_time, int* actually_held)
+{
+    int max_returned_elements=g_n_elemenets;    /*number of processes can be returned max*/
+    //Intializing pcb
+    struct pcb *tmp_pcb;
+    tmp_pcb = malloc(sizeof *tmp_pcb);
+    tmp_pcb->processes =(struct process*)malloc(max_returned_elements*sizeof(struct process));
+    int index=0;
+    *actually_held =0;
+    for (int i =0; i< g_index; i++)
+    {
+        struct process tmp_pros=g_pcb->processes[i];
+        
+        if (tmp_pros.arrival_time ==  arrival_time)
+        {
+            printf("From pcb prog id: %d \n", tmp_pros.prog_id);
+            printf("From pcb arrival time: %d \n", tmp_pros.arrival_time);
+            tmp_pcb->processes[index]=tmp_pros;
+            index =index +1;
+            *actually_held = *actually_held+1;
+
+        }
+    }
+    return tmp_pcb;
+}
