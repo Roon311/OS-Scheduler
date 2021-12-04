@@ -24,13 +24,13 @@ int main(int argc, char * argv[])
     printf("%i",pb->processes[1].arrival_time);
     printf("\n");
 
-    /*pu_delete_process(2);
+    pu_delete_process_at_identity(1);
     printf("%i",pb->processes[1].arrival_time);
-    printf("\n");*/
+    printf("\n");
 
-    pu_update_process(3,WAITING, 5555,8888); /*int prog_id,enum state curr_state,int exec_time,int finish_time*/
-    pu_add_extra_exec_time(3,3);
-    printf("%i",pu_get_process_at_pid(3)->exec_time);
+    pu_update_process_at_identity(2,-1,WAITING, 5555,8888); /*int prog_id,enum state curr_state,int exec_time,int finish_time*/
+    pu_add_extra_exec_time_at_identity(2,3);
+    printf("%i",pu_get_process_at_identity(2)->exec_time);
 
     return 0;
 }

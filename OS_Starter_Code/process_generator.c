@@ -1,4 +1,4 @@
-#include "headers.h"
+//#include "headers.h"
 #include "pcb.h"
 
 enum scheduling_algorithms {HPF, SRTN,RR };
@@ -67,6 +67,7 @@ void clearResources(int signum)
 {
     //TODO Clears all resources in case of interruption
     destroyClk(true);
+    
 }
 void clearResources_1(int signum)
 {
