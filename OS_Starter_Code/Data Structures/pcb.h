@@ -2,18 +2,76 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdlib.h>
+#include "headers.h"
+
 //pu: public 
 //pr: private
-enum state {RUNNING, WAITING, BLOCKED}; /*to express the state of process*/
+
+
+/* That file is represented as an essential part of out project. as it will hold data 
+    for all processes needs to run.
+
+    Data fields:
+        state: enum {running, waiting, blocked}
+            usually we will use running and waiting only as we assume that all processes are cpu bound
+        process: struct {prog_id, arrival time, curr state, runtime, execution time, finish time, priority}
+            hold for data needed for each process running
+            program id: should be defined by getpid()
+            arrival time: extracted from file read
+            current state: should first defined to be waiting
+            runtime: extracted from file
+            exectution time: should be given from schedular algorithm by message queue
+            finish time: should be given from schedular algorithm by messege queue
+            prioriy: extracted from file, and mainly used only by HPF algorithm
+        pcb: struct
+            just list of processes.
+
+    Important Functions:
+        pu_create_pcb(n_elements)
+            create pcb of certain size
+        pu_create_pcb_X() 
+            create pcb of size X
+        pu_get_cur_size
+            return number of elements inserted into pcb (only filled ones)
+        pu_update_size
+            update pcb size to newer one. probably you won't need to use it as when adding new process, if old size is not enough it will update it to new one.
+        pu_add_process
+            add new process to pcb.
+        pu_delete_process
+            delete process given process id
+        pu_change_state_for_pid (state)
+            change state of gived process id to certain new one
+        pu_update_process
+            update process data like exec_time
+        pu_get_remaining_time
+            calculate remainging time for process gived process id
+        pu_get_waiting_time   
+            calculate waiting time
+        pu_add_extra_exec_time
+            add extra execution time to process given process id.
+        pu_get_processes_at_arvl_time
+            get all processes at any arrival time 
+
+                 
+
+
+*/
+
+
+
+enum state {RUNNING, WAITING, BLOCKED, FINISHED}; /*to express the state of process*/
 
 struct process
 {
     /* representation for process in memory */
+    int         identity;          /*As prog_id is determined by schedular, there must be a datafield where it's determined before sending to schedular*/
     int         prog_id;        /*process id id, you can access it using getpid()*/
     int         arrival_time;   /*Arrival time at which process arrived*/
     enum state  curr_state;     /*state of process*/
     int         rum_time;       /*Time process that should be spent on CPU, source: file*/
-    int         exec_time;      /*Exection time. time already spent on CPU*/
+    int         exec_time;      /*Exection time. time already spent on CPU(Time elapsed)*/
+    int         finish_time;    /*time at which algorithm finish*/
+    int         priority;       /*Priority used mainly in HPF algorithm*/
     /*
         The waiting time and remaining time should are to be caluculed in fuctions
         Remaining time= run_time - exec_time
@@ -36,16 +94,18 @@ struct pcb *g_pcb;      /*Global variable  for pcb*/
 int g_n_elemenets;      /*number of processes pcb can hold*/
 int g_index;            /*index at whict next elemet to be inserted should be intialized first to zero*/
 
-struct process* pu_create_process(int prog_id,int arrival_time,enum state curr_state, int runtime,int exec_time)
+struct process* pu_create_process(int prog_id,int arrival_time, int runtime, int priority)
 {
     struct process *tmp_p;
     tmp_p=malloc(sizeof *tmp_p); /*Intializing the variable*/
 
     tmp_p->prog_id=prog_id;
     tmp_p->arrival_time=arrival_time;
-    tmp_p->curr_state=curr_state;
+    tmp_p->curr_state=WAITING;  /*As intially was waiting not running*/
     tmp_p->rum_time=runtime;
-    tmp_p->exec_time=exec_time;
+    tmp_p->exec_time=0;         /*As it didn't run at all*/
+    tmp_p->finish_time=-1;      /*should be edited later to represent exact finish time.*/
+    tmp_p->priority=priority;
 
 }
 
@@ -88,8 +148,10 @@ struct pcb* pu_create_pcb_100()
     return pu_create_pcb(100);
 }
 
+
 int pu_get_cur_size()
 {
+    /*return current size of pcb*/
     return g_n_elemenets;
 }
 void pu_update_size(int new_size)
@@ -114,6 +176,7 @@ void pu_add_process(struct process *p)
     {
         pu_update_size(g_n_elemenets+10);
     }
+    p->identity=g_index;
     g_pcb->processes[g_index]=*p;
     g_index= g_index +1;
 
@@ -135,11 +198,19 @@ int pu_find_index_at_pid(int pid)
     }
 }
 
-void pu_delete_process(int pid)
+int pu_find_index_at_identity(int identity)
 {
-
-    pr_delete_at_index(pu_find_index_at_pid(pid));
-
+    /*
+        It finds index at given program id
+    */
+    for (int i =0; i< g_index; i++)
+    {
+        //Looping all over the processes
+        if(g_pcb->processes[i].identity == identity)
+        {
+            return i;
+        }
+    }
 }
 
 void pr_delete_at_index(int i_to_delete)
@@ -154,6 +225,21 @@ void pr_delete_at_index(int i_to_delete)
     
 }
 
+
+void pu_delete_process_at_pid(int pid)
+{
+
+    pr_delete_at_index(pu_find_index_at_pid(pid));
+
+}
+
+void pu_delete_process_at_identity(int identity)
+{
+    pr_delete_at_index(pu_find_index_at_identity(identity));
+
+}
+
+
 void pu_change_state_for_pid(int pid, enum state cur_state)
 {
     /*
@@ -163,7 +249,16 @@ void pu_change_state_for_pid(int pid, enum state cur_state)
     g_pcb->processes[i].curr_state=cur_state;
 }
 
-void pu_update_state_to_wainting(int pid)
+void pu_change_state_for_identity(int identity, enum state cur_state)
+{
+    /*
+        It changes state for cetain process identity
+    */
+    int i= pu_find_index_at_identity(identity);
+    g_pcb->processes[i].curr_state=cur_state;
+}
+
+void pu_update_state_to_waiting_at_pid(int pid)
 {   
     /*
         Quickly update state of certain pid to waiting
@@ -171,12 +266,28 @@ void pu_update_state_to_wainting(int pid)
     pu_change_state_for_pid(pid, WAITING);
 }
 
-void pu_update_state_to_running(int pid)
+void pu_update_state_to_waiting_at_identity(int identity)
+{   
+    /*
+        Quickly update state of certain identity to waiting
+    */
+    pu_change_state_for_identity(identity, WAITING);
+}
+
+void pu_update_state_to_running_at_pid(int pid)
 {
     /*
         Quickly update state of certain pid to running
     */
     pu_change_state_for_pid(pid, RUNNING);
+}
+
+void pu_update_state_to_running_at_identity(int identity)
+{
+    /*
+        Quickly update state of certain identity to running
+    */
+    pu_change_state_for_identity(identity, RUNNING);
 }
 
 struct process*  pu_get_process_at_pid(int pid)
@@ -189,7 +300,17 @@ struct process*  pu_get_process_at_pid(int pid)
 
 }
 
-void pu_update_process (int prog_id,enum state curr_state, int runtime,int exec_time)
+struct process*  pu_get_process_at_identity(int identity)
+{
+    /*
+        it return a reference to process by searching at that pid.
+    */
+    int i=pu_find_index_at_identity(identity);
+    return &(g_pcb->processes[i]);
+
+}
+
+void pu_update_process_at_pid (int prog_id,enum state curr_state,int exec_time,int finish_time)
 {
     /*
         update value of process at prog_id
@@ -201,12 +322,32 @@ void pu_update_process (int prog_id,enum state curr_state, int runtime,int exec_
     struct process *tmp_p=pu_get_process_at_pid(prog_id);
 
     tmp_p->curr_state=curr_state;
-    tmp_p->rum_time=runtime;
     tmp_p->exec_time=exec_time;
+    tmp_p->finish_time=finish_time;
 
 }
 
-int pu_get_remaining_time(int pid)
+void pu_update_process_at_identity (int identity,int pid,enum state curr_state,int exec_time,int finish_time)
+{
+    /*
+        update value of process at identity
+        allwoed to update
+            1-curr_stat
+            2-runtime
+            3-exec_time
+            4-pid if you don't want to update set it to -1
+    */
+    struct process *tmp_p=pu_get_process_at_identity(identity);
+
+    if(pid != -1)
+        tmp_p->prog_id=pid;
+    tmp_p->curr_state=curr_state;
+    tmp_p->exec_time=exec_time;
+    tmp_p->finish_time=finish_time;
+
+}
+
+int pu_get_remaining_time_at_pid(int pid)
 {
     /*
         it calculates the remaining time to process
@@ -217,28 +358,90 @@ int pu_get_remaining_time(int pid)
 
 }
 
-int pu_get_waiting_time(int pid)
+int pu_get_remaining_time_at_identity(int identity)
+{
+    /*
+        it calculates the remaining time to process
+    */
+    struct process *tmp_p=pu_get_process_at_identity(identity);
+    //Remaining time= run_time - exec_time
+    return (tmp_p->rum_time-tmp_p->exec_time);
+
+}
+
+//TODO change it to work with clock
+int pu_get_waiting_time_at_pid(int pid)
 {
      /*
         it calculates the waiting time to process
     */
     struct process *tmp_p=pu_get_process_at_pid(pid);
     //wainting time = (current time - arrival time) -execution time
-    return (100- tmp_p->arrival_time) -tmp_p->exec_time;
+    return (getClk()- tmp_p->arrival_time) -tmp_p->exec_time;
 
 }
 
-void pu_add_extra_exec_time(int pid, int extra)
+int pu_get_waiting_time_at_identity(int identity)
+{
+     /*
+        it calculates the waiting time to process
+    */
+    struct process *tmp_p=pu_get_process_at_identity(identity);
+    //wainting time = (current time - arrival time) -execution time
+    return (getClk()- tmp_p->arrival_time) -tmp_p->exec_time;
+
+}
+
+void pu_add_extra_exec_time_at_pid(int pid, int extra)
 {
     // if new extra time for process is spent on CPU, that extra should be passed to be added    
     struct process *tmp_p=pu_get_process_at_pid(pid);
     tmp_p->exec_time=tmp_p->exec_time+extra;
 }
 
-void pu_update_exec_time(int pid, int new_exec_time)
+void pu_add_extra_exec_time_at_identity(int identity, int extra)
+{
+    // if new extra time for process is spent on CPU, that extra should be passed to be added    
+    struct process *tmp_p=pu_get_process_at_identity(identity);
+    tmp_p->exec_time=tmp_p->exec_time+extra;
+}
+
+void pu_update_exec_time_at_pid(int pid, int new_exec_time)
 {
     // if you calc the new exec time on your own, jsut pass it and it will be updated
     struct process *tmp_p=pu_get_process_at_pid(pid);
     tmp_p->exec_time=new_exec_time;
 }
 
+void pu_update_exec_time_at_identity(int identity, int new_exec_time)
+{
+    // if you calc the new exec time on your own, jsut pass it and it will be updated
+    struct process *tmp_p=pu_get_process_at_identity(identity);
+    tmp_p->exec_time=new_exec_time;
+}
+
+struct pcb* pu_get_processes_at_arvl_time(int arrival_time, int* actually_held)
+{
+    int max_returned_elements=g_n_elemenets;    /*number of processes can be returned max*/
+    //Intializing pcb
+    struct pcb *tmp_pcb;
+    tmp_pcb = malloc(sizeof *tmp_pcb);
+    tmp_pcb->processes =(struct process*)malloc(max_returned_elements*sizeof(struct process));
+    int index=0;
+    *actually_held =0;
+    for (int i =0; i< g_index; i++)
+    {
+        struct process tmp_pros=g_pcb->processes[i];
+        
+        if (tmp_pros.arrival_time ==  arrival_time)
+        {
+            printf("From pcb prog id: %d \n", tmp_pros.prog_id);
+            printf("From pcb arrival time: %d \n", tmp_pros.arrival_time);
+            tmp_pcb->processes[index]=tmp_pros;
+            index =index +1;
+            *actually_held = *actually_held+1;
+
+        }
+    }
+    return tmp_pcb;
+}
