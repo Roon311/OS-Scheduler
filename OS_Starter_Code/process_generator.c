@@ -122,6 +122,47 @@ enum scheduling_algorithms ask_for_alg()
 
 void read_input_file()
 {
+    //Sakka
+    static const char filename[] = "processes.txt";
+    FILE * fPointer;
+    fPointer = fopen(filename, "r");
+    char singleLine[BUFSIZ];
+
+    if(fPointer != NULL)
+    {
+        int ID, arrival, runtime, priority; 
+        if ( fgets(singleLine, sizeof singleLine, fPointer) != NULL )
+        {
+            //Just to get rid of the first line in the file.
+        }
+
+        while ( fgets(singleLine, sizeof singleLine, fPointer) != NULL )
+        {
+            if ( sscanf(singleLine, "%d", &ID) == 1 && sscanf(singleLine, "%*d\t%d", &arrival) == 1 && sscanf(singleLine, "%*d\t%*d\t%d", &runtime) == 1 && sscanf(singleLine, "%*d\t%*d\t%*d\t%d", &priority) == 1)
+            {
+                pu_add_process(pu_create_process(ID,arrival,runtime,priority));
+                //tupledata.Id = ID;
+                //tupledata.Arrivaltime = arrival;
+                //tupledata.Runningtime = runtime;
+                //tupledata.Priority = priority;
+                //sscanf(singleLine, "%*d\t%d", &arrival);
+                //sscanf(singleLine, "%*d\t%*d\t%d", &runtime);
+                //sscanf(singleLine, "%*d\t%*d\t%*d\t%d", &priority);
+                //printf("%d\n",ID);
+                //printf("%d\n", arrival);
+                //printf("%d\n", runtime);
+                //printf("%d\n\n", priority);
+                //printf("%d\t%d\t%d\t%d\n",tupledata.Id,tupledata.Arrivaltime,tupledata.Runningtime,tupledata.Priority);
+            }
+        }
+    }
+    else
+    {
+        perror(filename);
+    }
+    fclose(fPointer);
+
+    
     printf("Reading all processes from input file into pcb: \n");
     printf("█ 25%% Done\n\n");
     printf("█ █  50%% Done\n\n");
@@ -129,12 +170,12 @@ void read_input_file()
     printf("█ █ █ █  100%% Done\n\n");
     printf("ALl file has been read into memory let's execute them by your specified algorithm \n");
     // TODO sakke should be replacing it.
-    pu_add_process(pu_create_process(1,1,10, 8));
+    /*pu_add_process(pu_create_process(1,1,10, 8));
     pu_add_process(pu_create_process(2,2,20, 1));
     pu_add_process(pu_create_process(3,2,30, 7));
     pu_add_process(pu_create_process(4,6,40, 23));
     pu_add_process(pu_create_process(5,6,50, 4));
-    pu_add_process(pu_create_process(6,8,60, 4));
+    pu_add_process(pu_create_process(6,8,60, 4));*/
 
 }
 
