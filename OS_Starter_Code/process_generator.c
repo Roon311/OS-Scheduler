@@ -1,5 +1,5 @@
 //#include "headers.h"
-#include "pcb.h"
+#include "Data_Structures/pcb.h"
 
 enum scheduling_algorithms {HPF, SRTN,RR };
 

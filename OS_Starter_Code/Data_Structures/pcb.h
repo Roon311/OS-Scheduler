@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdlib.h>
-#include "headers.h"
+#include "../headers.h"
 
 //pu: public 
 //pr: private
@@ -79,18 +79,18 @@ struct process
     */
 };
 
-struct pcb
+struct pcb //
 {
     /*This struct is to represent PCB, where it will look like a dataframe in python*/
     /*Why I choose list?
         1- first in each iteration i will need to loop more(Fast access ) more times than appending as it shouldn't be frequent that many programs come each minut
         2- appending to pcd will be at the end, so no copying will happen frequently*/
 
-   struct process *processes;
+   struct process *processes; // ""pointer to a list""
 
 };
 
-struct pcb *g_pcb;      /*Global variable  for pcb*/
+struct pcb *g_pcb;      /*Global variable  for pcb*/   //Pointer to a pointer to a list//  //For malloc of PCB to hold it//
 int g_n_elemenets;      /*number of processes pcb can hold*/
 int g_index;            /*index at whict next elemet to be inserted should be intialized first to zero*/
 
@@ -106,7 +106,7 @@ struct process* pu_create_process(int prog_id,int arrival_time, int runtime, int
     tmp_p->exec_time=0;         /*As it didn't run at all*/
     tmp_p->finish_time=-1;      /*should be edited later to represent exact finish time.*/
     tmp_p->priority=priority;
-
+    return tmp_p;
 }
 
 
@@ -406,7 +406,7 @@ void pu_add_extra_exec_time_at_identity(int identity, int extra)
     tmp_p->exec_time=tmp_p->exec_time+extra;
 }
 
-void pu_update_exec_time_at_pid(int pid, int new_exec_time)
+void pu_update_exec_time_at_pid(int pid, int new_exec_time) 
 {
     // if you calc the new exec time on your own, jsut pass it and it will be updated
     struct process *tmp_p=pu_get_process_at_pid(pid);
@@ -420,7 +420,7 @@ void pu_update_exec_time_at_identity(int identity, int new_exec_time)
     tmp_p->exec_time=new_exec_time;
 }
 
-struct pcb* pu_get_processes_at_arvl_time(int arrival_time, int* actually_held)
+struct pcb* pu_get_processes_at_arvl_time(int arrival_time, int* actually_held) //used when we need to send a new process to scheduler
 {
     int max_returned_elements=g_n_elemenets;    /*number of processes can be returned max*/
     //Intializing pcb
