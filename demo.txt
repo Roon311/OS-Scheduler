@@ -1,3 +1,0 @@
-This file is written to test adding new files to git rep
-re commiting
-test test
