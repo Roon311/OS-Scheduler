@@ -11,7 +11,7 @@
  * ALgorithms implemented.
  * */
 typedef enum scheduling_algorithms_ {HPF, SRTN,RR } scheduling_algorithms;
-
+int quanta=0;
 
 
 ///==============================
@@ -135,7 +135,7 @@ scheduling_algorithms ask_for_alg()
 
     while(!(answer ==1 || answer ==2 | answer ==3))
     {
-        printf("Please specifiy an algorithm for sceduling. 1: HPF, 2: SRTN, 3: RR \n");
+        printf("Please specifiy an algorithm for sceduling.\n 1: HPF\n 2: SRTN\n 3: RR \n\n");
         scanf("%i", &answer);
 
         if(answer ==1)
@@ -151,7 +151,14 @@ scheduling_algorithms ask_for_alg()
         }
         if(answer ==3)
         {
-            printf("Working with RR, Round robin \n");
+            printf("\nPlease Specify the quanta\nIt should be greater than 0\nQuanta:");
+            scanf("%d", &quanta);
+            if(quanta<=0)
+            {
+                printf("\nPlease Input a quanta greater than 0\n\n");
+                scanf("%d", &quanta);
+            }
+            printf("Working with RR, Round robin, Quanta:%d \n",quanta);
             return RR;
         }
     }
@@ -250,7 +257,9 @@ int fork_schdular_alg(scheduling_algorithms chosen_alg)
                 printf("\nforkied SRTN sucessfult \n");
                 char buffer[20]; // Runtime int-->string
                 sprintf(buffer, "%d", t_count);
-                char *args[] = {"./RR.out", buffer, NULL};
+                char quanta_buffer[15];
+                sprintf(buffer, "%d", quanta);
+                char *args[] = {"./RR.out", buffer, quanta_buffer};
                 execvp(args[0],args);
                 printf("\nforkied SRTN sucessfult \n");
             }

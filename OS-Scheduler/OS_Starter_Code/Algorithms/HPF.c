@@ -28,7 +28,7 @@ struct Queue_str *q_strs;
 // Receive the sent process
 int get_remaining_time(process p)
 {
-    return p.run_time - p.exec_time;
+    return (p.run_time - p.exec_time);
 }
 
 int recieve_single_process()
