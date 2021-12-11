@@ -1,6 +1,6 @@
 //-----------------------------------------------Includes----------------------------------------------------------//
 #include "../headers.h"
-#include "../Data_Structures/RRQueue.h"
+#include "../Data_Structures/priority_queue.h"
 #include "../output_files/output_utils.h"
 #include "../output_files/queue_strings.h"
 //-----------------------------------------------Variables----------------------------------------------------------//
@@ -8,12 +8,12 @@
 /////+++++++ msg queue id is in header int msgqupid=152001;
 int completed = 0;    // number of completed processes
 int current_time = 0; // will be setted with the clock
-int quanta=0;
+int quanta=3;
 int tracer=0;
-int t_count;
+int t_count=0;
 bool PauseFlag=false;    //for the pausing 
-QNode *ready_q = NULL; // Ready Queue
-QNode *done_q = NULL;  // Queue containing completed processes
+node_priority *ready_q = NULL; // Ready Queue
+node_priority *done_q = NULL;  // Queue containing completed processes
 process CuP;                   // current process si that we fork the processes
 struct Queue_str *q_strs;
 //------------------------------------------------------------------------------------------------------------------//
@@ -58,13 +58,14 @@ int recieve_single_process()
         *ptbp = message.p; 
         printf("Process %d received at time: %d \n", ptbp->identity, getClk());
         ptbp->curr_state = WAITING;
+        ptbp->remaining_time=ptbp->run_time;
         if (ready_q == NULL)
         {
-            ready_q = newNode(*ptbp);
+            ready_q = newNode(*ptbp,getClk());
         }
         else
         {
-            push(&ready_q, *ptbp);
+            push(&ready_q, getClk(),*ptbp);
         }
         return 1;
     }
@@ -82,6 +83,62 @@ void ReceiveHandler(int signum)
 }
 void ChildHandler(int signum)
 {
+    if (waitpid(CuP.prog_id, NULL, WNOHANG)==0) //process did not return
+    {
+        printf("\nANA MSH FI EL IF\n\n");
+        return;
+    }  
+    else
+    {
+        //process terminated
+        printf("\nIn child handler else\n\n");
+        PauseFlag=false;
+        alarm(0);//if there is more quanta make it zero
+        CuP.curr_state=FINISHED;
+        CuP.remaining_time=0;
+
+        printf("\n --------Finished Process %d\n\n",CuP.identity);
+        completed++;
+        CuP.finish_time=getClk();
+        char new_str2[100]; // Runtime int-->string
+        sprintf(new_str2, "At time %d process %d finished arr %d total %d remain %d wait %f TA %f WTA %f\n",
+        getClk(), CuP.identity, CuP.arrival_time, CuP.run_time, 0, get_waiting_time(CuP), get_turn_around_time(CuP), get_weighted_turn_around(CuP));
+        enQueue_str(q_strs, new_str2);
+        add_new_finished_pros(CuP);
+    }  
+}
+void AlarmHandler(int signum)
+{
+    printf("\n ******Process %d in arrivalhandlerL112 with remaining time %d seconds*******",CuP.identity,CuP.remaining_time);
+    CuP.remaining_time =  CuP.remaining_time - quanta; 
+    printf("\n ******Process %d in arrivalhandlerL114 with remaining time %d seconds*******",CuP.identity,CuP.remaining_time);
+    if (CuP.remaining_time<=0) 
+    {
+        printf("\nProcess %d is Dooone %d!\n\n",CuP.identity,getClk());
+        PauseFlag=false;
+        return;
+    }
+
+    else if(isEmpty(&ready_q)==true)
+    {
+        printf("\nNo current process in queue\n\n");
+        alarm(quanta);//so sleep again
+        return;
+    }
+    else //quanta is over
+    {
+         if (kill(CuP.prog_id, SIGTSTP) == -1) // stop the executing process
+        {
+            perror("Stopping Failed");
+        }
+
+        
+        CuP.last_stop = getClk(); //store the time at which it is stopped
+        CuP.curr_state=WAITING;
+        push(&ready_q,getClk(),CuP); 
+        PauseFlag = false;
+        
+    }
 }
 //------------------------------------------------------------------------------------------------------------------//
 
@@ -91,6 +148,7 @@ void Execute_Process()
 
     printf("\n In execute\n\n");
     int PID;
+    printf("\n ******Process %d in beginning of execute with remaining time %d seconds*******",CuP.identity,CuP.remaining_time);
     if(CuP.remaining_time==CuP.run_time)// process was not forked before
     {
         char new_str1[100]; // Runtime int-->string
@@ -121,6 +179,7 @@ void Execute_Process()
         CuP.waiting_time = getClk() - CuP.arrival_time;
         CuP.curr_state = START;
         printf("Process %d is now executing\n", CuP.identity);
+        alarm(quanta);
     }
     else
     {
@@ -136,6 +195,7 @@ void Execute_Process()
         }
         else
         {
+            //alarm(quanta);
             CuP.waiting_time = CuP.waiting_time+(getClk() - CuP.last_stop);  //increment waiting time
             CuP.curr_state=RUNNING;
         }
@@ -157,21 +217,65 @@ void ApplyingAlgo()
         printf("\nThis is tha pause state2  %hi \n\n",PauseFlag);
         sleep(1);
         PauseFlag=true;
+        //signal(SIGCHLD,SIG_IGN);
         while(PauseFlag==true)
         {
             printf("\n Pausing\n\n");
             printf("\nThis is tha pause state3  %hi at time %d\n\n",PauseFlag,getClk());
             pause();
         }// out of pause if a process with smaller remaining time arrives or if the process ends and a new one needs to work
-        printf("\nThis is tha pause state4  %hi at time %d\n\n",PauseFlag,getClk());
+        //printf("\n-------------Pausing Process %d at %d \n\n",CuP.identity,getClk());
         printf("\n RESUMING! \n\n");
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------//
+void print_output()
+{
+    FILE *pFile;
+    pFile = fopen("scheduler.log", "w");
+    char *var = deQueue_str(q_strs);
+    while (var != "")
+    {
+        fprintf(pFile, var);
+        var = deQueue_str(q_strs);
+    }
+    fclose(pFile);
+}
+
 int main(int argc, char *argv[])
 {
-    initClk;
-    quanta = atoi(argv[2]); //get quanta from command line argument and store it   
-    printf("\n This is the quanta  %d\n\n",quanta);
+   /* printf("\nPlease Specify the quanta\nIt should be greater than 0\n\n");
+    scanf("%d", quanta);
+    if(quanta<=0)
+    {
+        printf("\nPlease Input a quanta greater than 0\n\n");
+        scanf("%d", &quanta);
+    }*/
+    printf("Working with RR, Round robin, Quanta:%d \n",quanta);
+    initClk();
+    printf("\n This is the quanta  %d \n\n",quanta);
+    t_count = atoi(argv[1]);
+    q_strs = createQueue_str();
+    signal(SIGUSR1, ReceiveHandler);//handler to when sending occurs so we can receive the process
+    signal(SIGALRM, AlarmHandler); //handle alarm signals received at the end of each quanta using the AlarmHandler
+    signal(SIGCHLD, ChildHandler); //handler when process stops 
+    while (true)
+    {
+       // printf("clk is: %d seconds\n\n", getClk());
+        // rec_many_process();
+        ApplyingAlgo();//apply the algorithm
+       
+        if (completed == t_count)
+        {
+            do_calculations();
+            print_output();
+            printf("\n Scheduling and Executing Done !!!\n\n");
+            // To Do:call the log function
+            destroyClk(true);
+            // To Do:clear the resources
+            exit(getpid());
+        }
+        sleep(1);
+    }
 }

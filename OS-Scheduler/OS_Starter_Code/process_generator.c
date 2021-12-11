@@ -11,7 +11,6 @@
  * ALgorithms implemented.
  * */
 typedef enum scheduling_algorithms_ {HPF, SRTN,RR } scheduling_algorithms;
-int quanta=0;
 
 
 ///==============================
@@ -92,7 +91,7 @@ int main(int argc, char * argv[])
     initClk();
     while(true)
     {
-        printf("curr_clk: %d \n",getClk());
+        //printf("curr_clk: %d \n",getClk());
 
         send_new_process_to_schedular(getClk(),AlgoPIID);
         sleep(1);
@@ -151,14 +150,7 @@ scheduling_algorithms ask_for_alg()
         }
         if(answer ==3)
         {
-            printf("\nPlease Specify the quanta\nIt should be greater than 0\nQuanta:");
-            scanf("%d", &quanta);
-            if(quanta<=0)
-            {
-                printf("\nPlease Input a quanta greater than 0\n\n");
-                scanf("%d", &quanta);
-            }
-            printf("Working with RR, Round robin, Quanta:%d \n",quanta);
+           
             return RR;
         }
     }
@@ -222,12 +214,12 @@ int fork_schdular_alg(scheduling_algorithms chosen_alg)
             if (pid ==0)
             {
                 //Child
-                printf("\nforkied HPF sucessfuly count: %d\n", t_count);
+                //printf("\nforkied HPF sucessfully count: %d\n", t_count);
                 char buffer[20]; // Runtime int-->string
                 sprintf(buffer, "%d", t_count);
                 char *args[] = {"./HPF.out", buffer, NULL};
                 execvp(args[0],args);
-                printf("\nforkied HPF sucessfult \n");
+                printf("\nforkied HPF sucessfully \n");
             }
             return pid;
     }
@@ -238,12 +230,12 @@ int fork_schdular_alg(scheduling_algorithms chosen_alg)
             if (pid ==0)
             {
                  //Child
-                printf("\nforkied SRTN sucessfult \n");
+                //printf("\nforkied SRTN sucessfully \n");
                 char buffer[20]; // Runtime int-->string
                 sprintf(buffer, "%d", t_count);
                 char *args[] = {"./SRTN.out", buffer, NULL};
                 execvp(args[0],args);
-                printf("\nforkied SRTN sucessfult \n");
+                printf("\nforkied SRTN sucessfully \n");
             }
             return pid;
     }
@@ -254,14 +246,12 @@ int fork_schdular_alg(scheduling_algorithms chosen_alg)
             if (pid ==0)
             {
                  //Child
-                printf("\nforkied SRTN sucessfult \n");
+                printf("\nforkied RR sucessfully \n");
                 char buffer[20]; // Runtime int-->string
                 sprintf(buffer, "%d", t_count);
-                char quanta_buffer[15];
-                sprintf(buffer, "%d", quanta);
-                char *args[] = {"./RR.out", buffer, quanta_buffer};
+                char *args[] = {"./RR.out", buffer,NULL};
                 execvp(args[0],args);
-                printf("\nforkied SRTN sucessfult \n");
+                printf("\nforkied RR sucessfully \n");
             }
             return pid;
     }

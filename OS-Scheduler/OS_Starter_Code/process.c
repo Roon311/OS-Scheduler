@@ -6,6 +6,7 @@ int working;
 void handler(int signum);
 int main(int agrc, char *argv[])
 {
+    sigset(SIGALRM, SIG_DFL);
     signal(SIGALRM, handler);
     initClk();
     remainingtime = atoi(argv[1]);
@@ -14,7 +15,8 @@ int main(int agrc, char *argv[])
 
     // TODO it needs to get the remaining time from somewhere
     int c;
-    //printf("\n Entering the process %d\n\n",getClk());
+    printf("\n Entering the process at time = %d\n\n",getClk());
+
     while (remainingtime > 0)
     {
       //   c = clock() / CLOCKS_PER_SEC;
@@ -24,7 +26,7 @@ int main(int agrc, char *argv[])
       pause();
       remainingtime--;
     }
-   // printf("\n Exiting the process %d\n\n",getClk());
+   printf("\n Exiting the process at time =%d\n\n",getClk());
 
    /// destroyClk(false);
     return 0;

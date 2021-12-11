@@ -72,3 +72,10 @@ process peek(struct Queue* q)
 {
     return q->front->key;
 }
+bool isEmpty(struct Queue* q)
+{
+    if(q->front==NULL)
+    {
+        return true;
+    }
+}

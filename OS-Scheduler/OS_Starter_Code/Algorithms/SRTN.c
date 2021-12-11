@@ -146,7 +146,7 @@ void Execute_Process()
     {
         char new_str1[100]; // Runtime int-->string
         sprintf(new_str1, "At time %d process %d started arr %d total %d remain %d wait %d\n",
-                getClk(), CuP.identity, CuP.arrival_time, CuP.run_time, CuP.run_time, getClk() - CuP.arrival_time);
+        getClk(), CuP.identity, CuP.arrival_time, CuP.run_time, CuP.run_time, getClk() - CuP.arrival_time);
         enQueue_str(q_strs, new_str1);
 
         PID = fork();
@@ -177,7 +177,7 @@ void Execute_Process()
     {
         char new_str2[100]; // Runtime int-->string
         sprintf(new_str2, "At time %d process %d resumed arr %d total %d remain %d wait %d\n",
-                getClk(), CuP.identity, CuP.arrival_time, CuP.run_time, CuP.run_time, getClk() - CuP.arrival_time);
+        getClk(), CuP.identity, CuP.arrival_time, CuP.run_time, CuP.run_time, getClk() - CuP.arrival_time);
         enQueue_str(q_strs, new_str2);
 
          if (kill(CuP.prog_id, SIGCONT) == -1) // stop the executing process
