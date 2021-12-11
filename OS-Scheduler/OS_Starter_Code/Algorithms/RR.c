@@ -1,6 +1,6 @@
 //-----------------------------------------------Includes----------------------------------------------------------//
 #include "../headers.h"
-#include "../Data_Structures/priority_queue.h"
+#include "../Data_Structures/RRQueue.h"
 #include "../output_files/output_utils.h"
 #include "../output_files/queue_strings.h"
 //-----------------------------------------------Variables----------------------------------------------------------//
@@ -12,8 +12,8 @@ int quanta=0;
 int tracer=0;
 int t_count;
 bool PauseFlag=false;    //for the pausing 
-node_priority *ready_q = NULL; // Ready Queue
-node_priority *done_q = NULL;  // Queue containing completed processes
+QNode *ready_q = NULL; // Ready Queue
+QNode *done_q = NULL;  // Queue containing completed processes
 process CuP;                   // current process si that we fork the processes
 struct Queue_str *q_strs;
 //------------------------------------------------------------------------------------------------------------------//
@@ -60,11 +60,11 @@ int recieve_single_process()
         ptbp->curr_state = WAITING;
         if (ready_q == NULL)
         {
-            ready_q = newNode(*ptbp, ptbp->priority);
+            ready_q = newNode(*ptbp);
         }
         else
         {
-            push(&ready_q, ptbp->priority, *ptbp);
+            push(&ready_q, *ptbp);
         }
         return 1;
     }
