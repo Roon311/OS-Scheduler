@@ -1,0 +1,68 @@
+current time : 2
+rem_quanta =3 
+Process 1 received at time: 3 , rem time is 10
+current time : 3
+rem_quanta =2 
+program id is updated to 30350
+run top, process 1 started at time3 
+current time : 4
+rem_quanta =3 
+Process 2 received at time: 5 , rem time is 4
+current time : 5
+rem_quanta =2 
+current time : 6
+rem_quanta =1 
+Process 3 received at time: 7 , rem time is 3
+current time : 7
+rem_quanta =0 
+remtime =0 
+else 
+prs 1 stopped at time 7 
+program id is updated to 30351
+run top, process 2 started at time7 
+current time : 8
+rem_quanta =3 
+current time : 9
+rem_quanta =2 
+current time : 9
+rem_quanta =1 
+current time : 10
+rem_quanta =0 
+remtime =0 
+process 2 finished at time 10
+1 completed
+program id is updated to 30352
+run top, process 3 started at time10 
+current time : 12
+rem_quanta =3 
+current time : 13
+rem_quanta =2 
+current time : 14
+rem_quanta =1 
+process 3 finished at time 14
+2 completed
+process 1 resumed at time 14
+run top, process 1 started at time14 
+current time : 15
+rem_quanta =3 
+current time : 15
+rem_quanta =2 
+current time : 17
+rem_quanta =1 
+current time : 17
+rem_quanta =0 
+Process 4 received at time: 18 , rem time is 20
+current time : 18
+rem_quanta =-1 
+current time : 18
+rem_quanta =-2 
+process 1 finished at time 18
+3 completed
+program id is updated to 30353
+run top, process 4 started at time18 
+current time : 20
+rem_quanta =3 
+current time : 20
+rem_quanta =2 
+current time : 21
+rem_quanta =1 
