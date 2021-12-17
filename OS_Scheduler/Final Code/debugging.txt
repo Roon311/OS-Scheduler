@@ -1,64 +1,24 @@
-Process 1 received at time: 2 , rem time is 10
-current time : 2
-process 1 start at time 2
-program id is updated to 27951
-current time : 3
-current time : 4
-Process 2 received at time: 5 , rem time is 4
-current time : 5
-process 1 will paused now at time 5
-process 2 start at time 5
-program id is updated to 27990
-current time : 6
-current time : 7
-Process 3 received at time: 8 , rem time is 3
-current time : 8
-current time : 9
-process 2 finished at time 9 
-process 2 finished at time 9
+Process 1 received at time: 2 
+program id is updated to 6554
+process 1 started at 2 
+Process 2 received at time: 5 
+Process 3 received at time: 7 
+process 1 finished at 12 
+process 1 finished at time 12
 1 completed
-process 3 start at time 9
-program id is updated to 28021
-current time : 10
-current time : 11
-current time : 12
-process 3 finished at time 12 
-process 3 finished at time 12
+program id is updated to 6610
+process 3 started at 13 
+process 3 finished at 16 
+process 3 finished at time 16
 2 completed
-process 1 resumed at time 12
-current time : 13
-current time : 14
-current time : 15
-current time : 16
-current time : 16
-Process 4 received at time: 17 , rem time is 20
-current time : 18
-current time : 19
-process 1 finished at time 19 
-process 1 finished at time 19
+program id is updated to 6642
+process 2 started at 16 
+Process 4 received at time: 17 
+process 2 finished at 20 
+process 2 finished at time 20
 3 completed
-process 4 start at time 19
-program id is updated to 28089
-current time : 20
-current time : 21
-current time : 22
-current time : 23
-current time : 24
-current time : 25
-current time : 26
-current time : 26
-current time : 27
-current time : 28
-current time : 29
-current time : 30
-current time : 31
-current time : 32
-current time : 33
-current time : 34
-current time : 35
-current time : 36
-current time : 37
-current time : 38
-process 4 finished at time 38 
-process 4 finished at time 38
+program id is updated to 6671
+process 4 started at 20 
+process 4 finished at 39 
+process 4 finished at time 39
 4 completed

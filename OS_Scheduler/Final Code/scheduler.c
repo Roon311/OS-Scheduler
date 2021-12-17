@@ -71,7 +71,7 @@ void rec_handler(int signum)
 }
 void insert_prs_to_hpf(process prs)
 {
-    printf("Process %d received at time: %d \n", prs.identity, getClk());
+    printf("HPF::Process %d received at time: %d \n", prs.identity, getClk());
     fprintf(pFile, "Process %d received at time: %d \n", prs.identity, getClk());
     push_to_pri_q(&ready_priority_q, prs, prs.priority);
 }
